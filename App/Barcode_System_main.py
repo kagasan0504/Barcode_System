@@ -3,6 +3,8 @@ import sys
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QPixmap, QCursor
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout
+from Function.frame import frame1
+
 
 # アプリケーションの作成
 app = QApplication(sys.argv)
@@ -18,8 +20,7 @@ window.setFixedSize(1000, 700)
 window.move(200, 200)
 window.setStyleSheet("background: #fff;")
 
-# レイアウトを構成するための箱みたいなもの
-grid = QGridLayout()
+grid = frame1()
 
 window.setLayout(grid)
 
