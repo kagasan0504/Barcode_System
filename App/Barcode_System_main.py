@@ -13,7 +13,7 @@ app = QApplication(sys.argv)
 # ウィンドウの表示する位置を任意に変更する
 # スタイルシートで背景色の変更
 window = QWidget()
-window.setWindowTitle("Who wants to be a programmer???")
+window.setWindowTitle("App of administrating report by using Barcode")
 window.setFixedSize(1000, 700)
 window.move(200, 200)
 window.setStyleSheet("background: #fff;")
