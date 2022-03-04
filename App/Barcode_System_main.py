@@ -16,8 +16,8 @@ app = QApplication(sys.argv)
 # スタイルシートで背景色の変更
 window = QWidget()
 window.setWindowTitle("App of administrating report by using Barcode")
-window.setFixedSize(1000, 700)
-window.move(200, 200)
+window.setFixedSize(1500, 900)
+window.move(100, 50)
 window.setStyleSheet("background: #fff;")
 
 frame1()
