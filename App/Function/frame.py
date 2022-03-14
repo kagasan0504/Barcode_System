@@ -3,8 +3,9 @@ from datetime import datetime
 import sys
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QCursor
+from PyQt5.QtGui import QPixmap, QCursor, QIcon
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout, QLineEdit, QHBoxLayout, QSizePolicy, QListView, QComboBox
+from Function.num_information import num_information as nminf
 
 grid = QGridLayout()
 main_layout = QGridLayout()
@@ -52,10 +53,13 @@ def frame1():
     grid.addLayout(main_layout, 1, 3, 18, 14)
 
 def main_layout_select():
-    resister_top()
-    # automate_resister()
+    # resister_top()
+    nmi = nminf("10000000")
+    nmi.disp()
+    automate_resister()
 
 def resister_top():
+    EmptySide_label = QLabel()
     ComboBox_Listview = QListView()
     # ComboBox_Listview.setObjectName("ComboBox")
     ComboBox_Listview.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -63,12 +67,13 @@ def resister_top():
     ComboBox.setView(ComboBox_Listview)
     ComboBox.setObjectName("ComboBox")
     ComboBox.setEditable(True)
+    # ComboBox.setItemIcon(QIcon("open.xpm"))
     ComboBox.lineEdit().setObjectName("ComboBox")
     ComboBox.lineEdit().setReadOnly(True)
     ComboBox.PopupOffcet = (0, 10)
     ComboBox.fade = True
     ComboBox.slide = True
-    ComboBox.stretch = True
+    ComboBox.stretch = False
     ComboBox.addItem("2NC")
     ComboBox.addItem("3NC")
     
@@ -84,7 +89,7 @@ def resister_top():
         *{
             height: 80px;
             color: #687;
-            background-color: transparent;
+            background-color: rgba(0, 0, 0, 0.0);
             opacity: 0;
             border-style: solid;
             border-width: 2px;
@@ -92,16 +97,19 @@ def resister_top():
             border-radius: 3px;
         }
         ::drop-down {
-            image: url(":/icon/icon.png");
+            image: url(":/icons/QcomboBox/drop-arrow.png");
+            background-color: rgba(0, 0, 0, 0.0);
+            opacity: 0;
             border: 0px;
-            height: 100px;
-            width: 100px;
+            height: 80px;
+            width: 80px;
         }
-        ::down-arrow {
+        /*::down-arrow {
+            background-color: rgba(0, 0, 0, 0.0);
             image: url(":/icon/icon.png");
-            height: 100px;
-            width: 100px;
-        }
+            height: 80px;
+            width: 80px;
+        }*/
         /*QComboBox::drop-down:hover#ComboBox {
             image: url("icon.png");
         }
@@ -113,6 +121,7 @@ def resister_top():
         QListView#ComboBox {
             color: #fff;
             background-color: transparent;
+            height: 60px;
             outline: none;
             border-radius: 3px;
             border-style: solid;
@@ -121,6 +130,7 @@ def resister_top():
         }
         QListView::item:hover#ComboBox,
         QListView::item:selected#ComboBox {
+            height: 60px;
             background-color: #c64236;
         }
         QListView::item#ComboBox {
@@ -128,7 +138,6 @@ def resister_top():
             padding-top: 4px;
             padding-bottom: 4px;
             padding-left: 5px;
-            height: 60px;
             border-style: 1px solid;
             border-radius: 3px;
         }
@@ -142,8 +151,8 @@ def resister_top():
         }
     """)
     # ===================================================================================================
-
-    main_layout.addWidget(ComboBox, 0, 0)
+    main_layout.addWidget(EmptySide_label, 0, 0, 3, 5)
+    main_layout.addWidget(ComboBox, 1, 1, 1, 3)
 
 # ======================================================================
 # バーコード読み込み画面

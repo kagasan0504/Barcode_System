@@ -5,7 +5,6 @@ from PyQt5.QtGui import QPixmap, QCursor
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout
 from Function.frame import frame1, grid
 
-
 # アプリケーションの作成
 app = QApplication(sys.argv)
 
