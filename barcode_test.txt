@@ -1,0 +1,320 @@
+'===========================================================
+' 1st Author: RIKU HIRUTA
+' 2nd Author: MAO TAKAHASHI
+' Latest Date: 2022/03/22
+'===========================================================
+
+Option Explicit
+
+Const SHT_MAIN = "main"
+Const SHT_HIST = "history"
+Const SHT_RECD = "record"
+
+Public Sub idProcesser(id As String)
+
+    Dim uid As String, theme As String, yr As String, uclass As String
+    Dim tName As String, sts As String, uname As String
+    Dim procDate As Date
+    Dim tcol As Integer
+        
+    procDate = Now
+    
+    '---セーブ処理
+
+    If id = "9999" Then
+         saveProc id
+
+    '---セーブ処理終了
+
+    Else
+        If existID(id, uname) Then
+            spltData id, uid, theme, yr, uclass, tName, tcol
+            entHist id, procDate, uid, tName, uname
+            wrtEnt uid, tcol, procDate
+        End If
+    
+    End If
+
+End Sub
+
+'==========================================================
+'ファイルの保存
+'==========================================================
+Sub saveProc(id As String)
+    Dim fName As String
+        Dim wb As Workbook
+    Set wb = ThisWorkbook
+    fName = "ReportLog_" & Format(Date, "yyyymmdd") & "_" & Format(Time, "hhnnss")
+    Call wb.SaveAs(fName)
+    MsgBox "データを保存しました", vbOKOnly + vbInformation
+End Sub
+
+'==========================================================
+'IDの長さと登録済みかどうかを判定して返す True=存在する
+'==========================================================
+Function existID(id As String, uname As String) As Boolean
+    Dim findData As Object
+    Dim result As Boolean
+        
+    If Not (Len(id) = 14) Then
+            MsgBox "データ長が違います", vbOKOnly + vbInformation
+        Else
+           Set findData = Nothing
+           Set findData = ThisWorkbook.Worksheets("record"). _
+               Columns("A").Find(Mid(id, 6, 7), LookAt:=xlWhole)
+              
+           If Not (findData Is Nothing) Then
+               result = True
+               uname = ThisWorkbook.Worksheets("record").Cells(findData.row, findData.Column + 1)
+               Range("d10").Value = uname
+               Range("f10").Value = ThisWorkbook.Worksheets("record").Cells(findData.row, findData.Column + 2)
+               
+            Else
+                MsgBox "名簿に存在しません", vbOKOnly + vbInformation
+            End If
+    End If
+    
+    existID = result
+End Function
+
+'==========================================================
+'入力データの分割
+'==========================================================
+Sub spltData(id As String, uid, theme As String, yr As String, uclass As String, tName As String, tcol As Integer)
+    Dim themeRange As Range
+    Dim themeObj As Range
+    
+    yr = Left(id, 2)
+    uclass = Mid(id, 3, 3)
+    uid = Mid(id, 6, 7)
+    theme = Right(id, 2)
+    Range("d6").Value = "20" + yr + "年度"
+    Range("e6").Value = uclass + "実験"
+    Range("d8").Value = uid
+   
+'    With ThisWorkbook.Worksheets("record")
+         Set themeRange = ThisWorkbook.Worksheets("record").Range("c1:z1")
+         Set themeObj = themeRange.Find(theme, LookAt:=xlWhole)
+'    End With
+    tcol = themeObj.Column
+    tName = ThisWorkbook.Worksheets("record").Cells(2, tcol).Value
+    Range("d12").Value = tName
+End Sub
+
+'==========================================================
+'履歴登録
+'==========================================================
+Sub entHist(id As String, procDate As Date, uid As String, tName As String, uname As String)
+    Dim newRow As Integer
+    
+    With ThisWorkbook.Worksheets("history")
+        newRow = .Cells(Rows.Count, "A").End(xlUp).row + 1
+        .Cells(newRow, 1).Value = id
+        .Cells(newRow, 2).Value = procDate
+        .Cells(newRow, 3).Value = uid
+        .Cells(newRow, 4).Value = uname
+        .Cells(newRow, 5).Value = tName
+        .Cells(newRow, 6).Value = Range("I3").Value
+    End With
+End Sub
+
+'==========================================================
+'名簿登録
+'==========================================================
+Sub wrtEnt(uid As String, tcol As Integer, procDate As Date)
+
+    Dim uidRange As Range
+    Dim row As Integer
+    Dim entObj As Range
+    Dim sts As String
+    Dim sts1d, sts2d As String
+    Dim commentTmp As String
+    Dim newComment As String
+    Static num As Integer: num = 1
+    Dim box As VbMsgBoxResult
+
+    
+    With ThisWorkbook.Worksheets("record")
+        Set uidRange = ThisWorkbook.Worksheets("record").Range("A:A")
+        Set entObj = uidRange.Find(uid, LookAt:=xlWhole)
+        row = entObj.row
+        
+        sts1d = .Cells(row, tcol).Value
+        sts2d = .Cells(row, tcol + 1).Value
+        
+        Range("d14").Font.Color = RGB(0, 0, 255)
+
+        '---取消処理
+
+        If Range("I3").Value = "取消" Then
+            If Not sts2d = "" Then
+                .Cells(row, tcol + 1).Clear
+                .Cells(row, tcol + 1).Interior.ColorIndex = 0
+                sts = "受取取消完了"
+                sts2d = .Cells(row, tcol + 1).Value
+            Else
+                If Not sts1d = "" Then
+                
+                    num = .Cells(row, tcol + 2).Value
+
+                    If (.Cells(row, tcol + 2).Comment Is Nothing) Then
+                        box = MsgBox("本当に取消しますか？" & vbCrLf & "※この操作を行うと該当生徒のデータがすべて消去されます", vbYesNo + vbDefaultButton2)
+                        If box = vbNo Then
+                            MsgBox ("取消を中止しました")
+                            sts = "取消を中止しました"
+                        Else
+                            .Cells(row, tcol).Clear
+                            .Cells(row, tcol).Interior.ColorIndex = 0
+
+                            sts = "取消完了"
+                            num = 0
+                        End If
+                    
+                    Else
+                        If num = 1 Then
+                        .Cells(row, tcol).Clear
+                        .Cells(row, tcol).Interior.ColorIndex = 0
+                        Else
+                            commentTmp = .Cells(row, tcol + 2).Comment.Text
+                            .Cells(row, tcol).ClearComments
+                            .Cells(row, tcol).AddComment commentTmp
+                        End If
+
+                        sts = Str(num) + "次提出取消完了"
+                        num = num - 1
+                        
+                    End If
+
+                    .Cells(row, tcol + 2).ClearComments
+                    sts1d = .Cells(row, tcol).Value
+                    .Cells(row, tcol + 2).Value = num
+
+                Else
+                    Range("d14").Font.Color = RGB(255, 0, 0)
+                    sts = "エラー：データが存在しません"
+                    MsgBox sts, vbOKOnly + vbInformation
+                End If
+            End If
+        End If
+
+        '---取消処理終了
+
+        '---受取処理
+
+        If Range("I3").Value = "受取" Then
+            If Not sts1d = "" Then
+                If (sts2d = "") Then
+                    .Cells(row, tcol + 1).Value = procDate
+                    .Cells(row, tcol + 1).Interior.Color = RGB(255, 200, 200)
+                    sts = "最終受取完了"
+                    sts2d = .Cells(row, tcol + 1).Value
+                Else
+                    Range("d14").Font.Color = RGB(255, 0, 0)
+                    sts = "エラー：最終受取済みです"
+                    MsgBox sts, vbOKOnly + vbInformation
+                End If
+            Else
+                Range("d14").Font.Color = RGB(255, 0, 0)
+                sts = "エラー：提出されていません"
+                MsgBox sts, vbOKOnly + vbInformation
+            End If
+        End If
+                
+        '---受取処理終了
+
+        '---提出処理
+
+        If Range("I3").Value = "提出" Then
+            If Not sts2d = "" Then
+                Range("d14").Font.Color = RGB(255, 0, 0)
+                sts = "エラー：最終受取済みです"
+                MsgBox sts, vbOKOnly + vbInformation
+            Else
+                If sts1d = "" Then
+                    .Cells(row, tcol).Value = procDate
+                Else
+                    num = .Cells(row, tcol + 2).Value
+                    num = num + 1
+
+                    If (.Cells(row, tcol).Comment Is Nothing) Then
+                        commentTmp = ""
+                    Else
+                        commentTmp = .Cells(row, tcol).Comment.Text
+                    End If
+                    
+                    .Cells(row, tcol + 2).ClearComments
+                    Call .Cells(row, tcol + 2).AddComment(commentTmp)
+                    .Cells(row, tcol).ClearComments
+                    newComment = procDate & vbCrLf & Str(num) & "次"
+
+                    Call .Cells(row, tcol).AddComment(commentTmp & vbCrLf & newComment)
+                End If
+                
+                sts = Str(num) + "次提出完了"
+                .Cells(row, tcol + 2).Value = num
+                .Cells(row, tcol).Interior.Color = RGB(200, 255, 200)
+                sts1d = .Cells(row, tcol).Value
+
+            End If
+        End If
+
+        '---提出処理終了
+
+        '---報遅処理
+
+        If Range("I3").Value = "報遅" Then
+            If Not sts2d = "" Then
+                Range("d14").Font.Color = RGB(255, 0, 0)
+                sts = "エラー：最終受取済みです"
+                MsgBox sts, vbOKOnly + vbInformation
+            Else
+                If sts1d = "" Then
+                    .Cells(row, tcol).Value = procDate & "(報遅)"
+                    
+                Else
+                    num = .Cells(row, tcol + 2).Value
+                    num = num + 1
+
+                    If (.Cells(row, tcol).Comment Is Nothing) Then
+                        commentTmp = ""
+                    Else
+                        commentTmp = .Cells(row, tcol).Comment.Text
+                    End If
+                    
+                    .Cells(row, tcol + 2).ClearComments
+                    Call .Cells(row, tcol + 2).AddComment(commentTmp)
+                    .Cells(row, tcol).ClearComments
+                    newComment = procDate & vbCrLf & Str(num) & "次(報遅)"
+
+                    Call .Cells(row, tcol).AddComment(commentTmp & vbCrLf & newComment)
+                End If
+
+                sts = Str(num) + "次受取完了(報遅)"
+                .Cells(row, tcol + 2).Value = num
+                .Cells(row, tcol).Interior.Color = RGB(200, 255, 200)
+                sts1d = .Cells(row, tcol).Value
+
+            End If
+        End If
+
+
+        '---報遅処理終了
+
+    End With
+    
+    Range("d14").Value = sts
+    Range("d16").Value = sts1d
+    Range("d17").Value = sts2d
+
+
+End Sub
+
+
+
+
+
+
+
+
+
+
